@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ф">
+<title>Flash Karty Ruština</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #0a0a0f; }
+  .screen { display: none; }
+  .screen.active { display: flex; }
+</style>
+</head>
+<body class="text-zinc-100 font-mono min-h-screen">
+
+<!-- MENU -->
+<div id="menu" class="screen active flex-col h-screen px-6 pt-14 pb-10 justify-between" style="background:#0a0a0f;">
+  <div class="text-center">
+    <div class="text-3xl font-bold text-red-500 tracking-widest" style="text-shadow:0 0 40px rgba(231,76,60,0.4);">ФЛЭШ КАРТЫ</div>
+    <div class="text-lg text-red-400 tracking-widest mt-1">РУССКИЙ ЯЗЫК</div>
+    <!-- Language switcher -->
+    <div class="flex justify-center gap-3 mt-3">
+      <button id="lang-cz" onclick="setLang('cz')" class="text-2xl opacity-100 transition-opacity">🇨🇿</button>
+      <button id="lang-en" onclick="setLang('en')" class="text-2xl opacity-40 transition-opacity">🇬🇧</button>
+    </div>
+  </div>
+  <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex justify-around">
+    <div class="text-center"><div class="text-xl font-bold text-amber-400" id="stat-games">0</div><div class="text-xs text-zinc-500 tracking-widest mt-1" data-i18n="games">Her</div></div>
+    <div class="text-center"><div class="text-xl font-bold text-amber-400" id="stat-best">0%</div><div class="text-xs text-zinc-500 tracking-widest mt-1" data-i18n="best">Nejlepší</div></div>
+    <div class="text-center"><div class="text-xl font-bold text-amber-400" id="stat-total">0%</div><div class="text-xs text-zinc-500 tracking-widest mt-1" data-i18n="overall">Celkově</div></div>
+  </div>
+  <div class="flex flex-col gap-2">
+    <div class="text-xs text-zinc-600 tracking-widest uppercase pl-1 mb-1" data-i18n="practice">Cvičení</div>
+    <button onclick="goSettings('azbuka')" class="bg-zinc-900 border border-red-900 rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-95 transition-transform"><span class="text-xl w-7 text-center">🔤</span><span class="flex-1 text-left text-sm" data-i18n="alphabet">Azbuka</span><span class="text-zinc-600 text-xs">›</span></button>
+    <button onclick="goSettings('slovicka')" class="bg-zinc-900 border border-red-900 rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-95 transition-transform"><span class="text-xl w-7 text-center">📖</span><span class="flex-1 text-left text-sm" data-i18n="vocabulary">Slovíčka</span><span class="text-zinc-600 text-xs">›</span></button>
+    <button onclick="goSettings('fraze')" class="bg-zinc-900 border border-red-900 rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-95 transition-transform"><span class="text-xl w-7 text-center">💬</span><span class="flex-1 text-left text-sm" data-i18n="phrases">Fráze z médií</span><span class="text-zinc-600 text-xs">›</span></button>
+    <button onclick="goSettings('zkratky')" class="bg-zinc-900 border border-red-900 rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-95 transition-transform"><span class="text-xl w-7 text-center">🎖️</span><span class="flex-1 text-left text-sm" data-i18n="abbreviations">Vojenské zkratky</span><span class="text-zinc-600 text-xs">›</span></button>
+    <button onclick="goSettings('oboji')" class="bg-zinc-900 border border-red-900 rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-95 transition-transform"><span class="text-xl w-7 text-center">⚡</span><span class="flex-1 text-left text-sm" data-i18n="all">Vše dohromady</span><span class="text-zinc-600 text-xs">›</span></button>
+    <div class="text-xs text-zinc-600 tracking-widest uppercase pl-1 mt-2 mb-1" data-i18n="overview">Přehled</div>
+    <button onclick="showScreen('tabulka')" class="bg-zinc-900 border border-zinc-800 rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-95 transition-transform"><span class="text-xl w-7 text-center">📋</span><span class="flex-1 text-left text-sm" data-i18n="table">Tabulka azbuky</span><span class="text-zinc-600 text-xs">›</span></button>
+    <button onclick="showScreen('stats')" class="bg-zinc-900 border border-zinc-800 rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-95 transition-transform"><span class="text-xl w-7 text-center">📊</span><span class="flex-1 text-left text-sm" data-i18n="statistics">Statistiky</span><span class="text-zinc-600 text-xs">›</span></button>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="settings" class="screen flex-col h-screen px-6 pt-14 pb-10 gap-6 overflow-y-auto" style="background:#0a0a0f;">
+  <div class="flex items-center gap-4 flex-shrink-0">
+    <button onclick="showScreen('menu')" class="bg-zinc-900 border border-zinc-800 rounded-xl w-10 h-10 flex items-center justify-center text-xl active:scale-95 transition-transform">‹</button>
+    <div class="font-bold text-lg" id="settings-title">Nastavení</div>
+  </div>
+  <div class="flex-col gap-2" id="category-group">
+    <div class="text-xs text-zinc-500 tracking-widest uppercase pl-1 mb-2" data-i18n="category">Kategorie</div>
+    <div class="grid grid-cols-2 gap-2" id="category-options"></div>
+  </div>
+  <div class="flex-col gap-2" id="diff-group">
+    <div class="text-xs text-zinc-500 tracking-widest uppercase pl-1 mb-2" data-i18n="difficulty">Obtížnost</div>
+    <div class="grid grid-cols-3 gap-2">
+      <button onclick="selectDiff('vse',this)" class="opt-btn bg-red-600 border border-red-600 rounded-xl py-3 text-white text-xs text-center cursor-pointer transition-all" data-i18n="all_diff">Vše</button>
+      <button onclick="selectDiff('zacatecnik',this)" class="opt-btn bg-zinc-900 border border-zinc-700 rounded-xl py-3 text-zinc-500 text-xs text-center cursor-pointer transition-all" data-i18n="beginner">🟢 Začátečník</button>
+      <button onclick="selectDiff('pokrocily',this)" class="opt-btn bg-zinc-900 border border-zinc-700 rounded-xl py-3 text-zinc-500 text-xs text-center cursor-pointer transition-all" data-i18n="advanced">🔴 Pokročilý</button>
+    </div>
+  </div>
+  <div class="flex flex-col gap-2">
+    <div class="text-xs text-zinc-500 tracking-widest uppercase pl-1" data-i18n="card_count">Počet karet</div>
+    <div class="grid grid-cols-4 gap-2" id="count-grid">
+      <button onclick="selectCount(5,this)" class="opt-btn bg-zinc-900 border border-zinc-700 rounded-xl py-3 text-zinc-500 text-xs text-center cursor-pointer transition-all">5</button>
+      <button onclick="selectCount(10,this)" class="opt-btn bg-zinc-900 border border-zinc-700 rounded-xl py-3 text-zinc-500 text-xs text-center cursor-pointer transition-all">10</button>
+      <button onclick="selectCount(20,this)" class="opt-btn bg-red-600 border border-red-600 rounded-xl py-3 text-white text-xs text-center cursor-pointer transition-all">20</button>
+      <button onclick="selectCount(9999,this)" class="opt-btn bg-zinc-900 border border-zinc-700 rounded-xl py-3 text-zinc-500 text-xs text-center cursor-pointer transition-all" data-i18n="all_cards">Vše</button>
+    </div>
+  </div>
+  <div class="flex-col gap-2" id="dir-group">
+    <div class="text-xs text-zinc-500 tracking-widest uppercase pl-1 mb-2" data-i18n="direction">Směr</div>
+    <div class="grid grid-cols-2 gap-2" id="dir-buttons"></div>
+  </div>
+  <button onclick="startGame()" class="mt-auto bg-red-600 rounded-2xl py-5 text-white font-bold tracking-widest uppercase text-sm cursor-pointer active:scale-98 transition-transform flex-shrink-0" data-i18n="start">ZAČÍT →</button>
+</div>
+
+<!-- GAME -->
+<div id="game" class="screen flex-col h-screen" style="background:#0a0a0f;">
+  <div class="flex items-center gap-3 px-5 pt-14 pb-3 flex-shrink-0">
+    <button onclick="showScreen('menu')" class="bg-zinc-900 border border-zinc-800 rounded-xl w-10 h-10 flex items-center justify-center text-xl active:scale-95 transition-transform flex-shrink-0">‹</button>
+    <div class="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
+      <div class="h-full bg-red-500 rounded-full transition-all duration-300" id="progress-fill"></div>
+    </div>
+    <div class="text-xs text-zinc-500 min-w-10 text-right" id="progress-text">0/0</div>
+  </div>
+  <div class="flex flex-col flex-1 px-5 gap-3 overflow-hidden">
+    <div class="self-start text-xs tracking-widest uppercase text-zinc-500 border border-zinc-800 rounded-md px-2 py-1" id="card-category">azbuka</div>
+    <div class="flex-1 bg-zinc-900 border border-zinc-800 rounded-3xl flex flex-col items-center justify-center px-6 py-8 gap-4 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-40 h-40 rounded-full bg-red-900 opacity-10 blur-2xl pointer-events-none"></div>
+      <div class="text-xs text-zinc-600 tracking-widest uppercase" id="card-direction">RUSKY → ČESKY</div>
+      <div class="font-bold text-3xl text-center leading-snug" id="card-question">А</div>
+      <div class="text-sm text-amber-400 italic tracking-wide text-center" id="card-phonetic"></div>
+      <button onclick="speakCurrent()" class="border border-zinc-700 rounded-lg px-3 py-1 text-zinc-500 text-base active:bg-zinc-800 transition-colors">🔊</button>
+      <div class="hidden flex-col items-center gap-2 pt-4 border-t border-zinc-800 w-full text-center" id="card-answer">
+        <div class="text-xs text-zinc-600 tracking-widest uppercase" data-i18n="correct_ans">Správně</div>
+        <div class="font-bold text-xl text-red-400" id="answer-text"></div>
+      </div>
+    </div>
+    <div class="hidden items-center gap-3 px-4 py-3 rounded-xl text-sm" id="feedback"></div>
+    <div class="flex gap-3 items-center flex-shrink-0">
+      <input type="text" id="answer-input" class="flex-1 bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-zinc-100 font-mono text-base outline-none focus:border-red-500 transition-colors" autocomplete="off" autocorrect="off" autocapitalize="off">
+      <button onclick="checkAnswer()" id="submit-btn" class="bg-red-600 rounded-2xl w-14 h-14 text-white text-xl flex items-center justify-center active:scale-95 transition-transform flex-shrink-0">→</button>
+    </div>
+    <button onclick="nextCard()" id="next-btn" class="hidden items-center justify-center gap-2 bg-zinc-900 border border-zinc-800 rounded-2xl py-4 text-sm active:bg-zinc-800 transition-colors flex-shrink-0" data-i18n="next_card">Další karta →</button>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="result" class="screen flex-col h-screen px-6 pt-16 pb-10 justify-between items-center" style="background:#0a0a0f;">
+  <div class="text-center">
+    <div class="text-6xl mb-4" id="result-emoji">🎉</div>
+    <div class="font-bold text-2xl mb-2" id="result-title">Hotovo!</div>
+    <div class="text-zinc-500 text-xs" id="result-sub"></div>
+  </div>
+  <div class="text-center">
+    <div class="font-bold text-8xl text-red-500 leading-none" style="text-shadow:0 0 60px rgba(231,76,60,0.3);" id="score-pct">0%</div>
+    <div class="text-zinc-500 text-xs tracking-widest mt-2" data-i18n="success_rate">ÚSPĚŠNOST</div>
+  </div>
+  <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex justify-around w-full">
+    <div class="text-center"><div class="font-bold text-xl text-green-500" id="res-correct">0</div><div class="text-xs text-zinc-500 tracking-widest mt-1" data-i18n="correct">Správně</div></div>
+    <div class="text-center"><div class="font-bold text-xl text-red-500" id="res-wrong">0</div><div class="text-xs text-zinc-500 tracking-widest mt-1" data-i18n="wrong">Špatně</div></div>
+    <div class="text-center"><div class="font-bold text-xl" id="res-total">0</div><div class="text-xs text-zinc-500 tracking-widest mt-1" data-i18n="total">Celkem</div></div>
+  </div>
+  <div class="flex flex-col gap-3 w-full">
+    <button id="repeat-btn" onclick="repeatWrong()" class="bg-red-600 rounded-2xl py-4 text-white font-bold tracking-widest uppercase text-xs active:scale-98 transition-transform" data-i18n="repeat_mistakes">OPAKOVAT CHYBY</button>
+    <button onclick="startGame()" class="bg-zinc-900 border border-zinc-800 rounded-2xl py-4 text-sm active:bg-zinc-800 transition-colors" data-i18n="play_again">Hrát znovu</button>
+    <button onclick="showScreen('menu')" class="bg-zinc-900 border border-zinc-800 rounded-2xl py-4 text-sm active:bg-zinc-800 transition-colors" data-i18n="menu">Menu</button>
+  </div>
+</div>
+
+<!-- TABULKA -->
+<div id="tabulka" class="screen flex-col h-screen" style="background:#0a0a0f;">
+  <div class="flex items-center gap-4 px-6 pt-14 pb-4 flex-shrink-0">
+    <button onclick="showScreen('menu')" class="bg-zinc-900 border border-zinc-800 rounded-xl w-10 h-10 flex items-center justify-center text-xl active:scale-95 transition-transform">‹</button>
+    <div class="font-bold text-lg" data-i18n="table">Tabulka azbuky</div>
+  </div>
+  <div class="flex-1 overflow-y-scroll px-6 pb-16" style="-webkit-overflow-scrolling:touch;">
+    <div class="text-xs text-zinc-600 tracking-widest uppercase mb-3" data-i18n="tap_letter">Klikni na písmeno pro detail</div>
+    <div class="grid grid-cols-2 gap-2" id="tabulka-grid"></div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div id="stats" class="screen flex-col h-screen px-6 pt-14 pb-10 gap-5" style="background:#0a0a0f;">
+  <div class="flex items-center gap-4 flex-shrink-0">
+    <button onclick="showScreen('menu')" class="bg-zinc-900 border border-zinc-800 rounded-xl w-10 h-10 flex items-center justify-center text-xl active:scale-95 transition-transform">‹</button>
+    <div class="font-bold text-lg" data-i18n="statistics">Statistiky</div>
+  </div>
+  <div class="grid grid-cols-2 gap-3">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 text-center"><div class="font-bold text-3xl text-red-400" id="s-games">0</div><div class="text-xs text-zinc-500 tracking-widest mt-2" data-i18n="num_games">Počet her</div></div>
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 text-center"><div class="font-bold text-3xl text-red-400" id="s-best">0%</div><div class="text-xs text-zinc-500 tracking-widest mt-2" data-i18n="best_score">Nejlepší skóre</div></div>
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 text-center"><div class="font-bold text-3xl text-red-400" id="s-total-q">0</div><div class="text-xs text-zinc-500 tracking-widest mt-2" data-i18n="total_q">Otázek celkem</div></div>
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 text-center"><div class="font-bold text-3xl text-red-400" id="s-avg">0%</div><div class="text-xs text-zinc-500 tracking-widest mt-2" data-i18n="average">Průměr</div></div>
+  </div>
+  <button onclick="resetStats()" class="mt-auto border border-zinc-800 rounded-xl py-4 text-zinc-500 text-xs active:bg-zinc-900 transition-colors" data-i18n="reset_stats">Smazat statistiky</button>
+</div>
+
+<!-- DETAIL OVERLAY -->
+<div id="detail-overlay" class="hidden fixed inset-0 bg-black bg-opacity-85 z-50 items-center justify-center p-8" onclick="closeDetail(event)">
+  <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-10 text-center w-full max-w-sm flex flex-col gap-4 relative">
+    <button onclick="closeDetail()" class="absolute top-4 right-4 bg-zinc-800 border border-zinc-700 rounded-lg w-8 h-8 text-zinc-500 text-sm flex items-center justify-center">✕</button>
+    <div class="text-8xl text-red-400 leading-none" style="text-shadow:0 0 40px rgba(231,76,60,0.3);" id="d-pismeno"></div>
+    <div class="text-xl text-amber-400 italic" id="d-ph"></div>
+    <div class="text-sm text-zinc-500 tracking-widest" id="d-cz"></div>
+    <div class="bg-zinc-800 border border-zinc-700 rounded-xl p-4">
+      <div class="text-xs text-zinc-500 tracking-widest uppercase mb-2" data-i18n="example_word">Příklad slova</div>
+      <div class="text-lg text-zinc-100 mb-1" id="d-slovo"></div>
+      <div class="text-xs text-amber-400 italic mb-1" id="d-slovo-ph"></div>
+      <div class="text-xs text-zinc-500" id="d-slovo-cz"></div>
+    </div>
+    <button onclick="speakText(document.getElementById('d-slovo').textContent)" class="bg-red-600 rounded-xl py-3 text-white text-sm cursor-pointer" data-i18n="play_pronunciation">🔊 Přehrát výslovnost</button>
+  </div>
+</div>
+
+<script>
+// ── I18N ──
+const i18n = {
+  cz: {
+    games:'Her', best:'Nejlepší', overall:'Celkově',
+    practice:'Cvičení', alphabet:'Azbuka', vocabulary:'Slovíčka',
+    phrases:'Fráze z médií', abbreviations:'Vojenské zkratky',
+    all:'Vše dohromady', overview:'Přehled', table:'Tabulka azbuky',
+    statistics:'Statistiky', category:'Kategorie', difficulty:'Obtížnost',
+    all_diff:'Vše', beginner:'🟢 Začátečník', advanced:'🔴 Pokročilý',
+    card_count:'Počet karet', all_cards:'Vše', direction:'Směr',
+    start:'ZAČÍT →', correct_ans:'Správně', next_card:'Další karta →',
+    success_rate:'ÚSPĚŠNOST', correct:'Správně', wrong:'Špatně',
+    total:'Celkem', repeat_mistakes:'OPAKOVAT CHYBY', play_again:'Hrát znovu',
+    menu:'Menu', tap_letter:'Klikni na písmeno pro detail',
+    num_games:'Počet her', best_score:'Nejlepší skóre',
+    total_q:'Otázek celkem', average:'Průměr', reset_stats:'Smazat statistiky',
+    example_word:'Příklad slova', play_pronunciation:'🔊 Přehrát výslovnost',
+    settings:'Nastavení',
+    dirs: {
+      'ru-cz': '🇷🇺 → 🇨🇿', 'cz-ru': '🇨🇿 → 🇷🇺',
+      'cz-en': '🇨🇿 → 🇬🇧', 'en-cz': '🇬🇧 → 🇨🇿',
+    },
+    dir_labels: {
+      'ru-cz': 'RUSKY → ČESKY', 'cz-ru': 'ČESKY → RUSKY',
+      'cz-en': 'ČESKY → ANGLICKY', 'en-cz': 'ANGLICKY → ČESKY',
+    },
+    correct_msg: '✓ Správně!',
+    wrong_msg: (a) => `✗ Správně: ${a}`,
+    result_titles: ['Nevzdávej se!', 'Skoro!', 'Dobře!', 'Výborně!'],
+    repeat_btn: (n) => `OPAKOVAT CHYBY (${n})`,
+    score_label: (c,t) => `${c} z ${t} správně`,
+    placeholder: 'Tvoje odpověď...',
+  },
+  en: {
+    games:'Games', best:'Best', overall:'Overall',
+    practice:'Practice', alphabet:'Alphabet', vocabulary:'Vocabulary',
+    phrases:'Media Phrases', abbreviations:'Military Abbrev.',
+    all:'All Together', overview:'Overview', table:'Alphabet Table',
+    statistics:'Statistics', category:'Category', difficulty:'Difficulty',
+    all_diff:'All', beginner:'🟢 Beginner', advanced:'🔴 Advanced',
+    card_count:'Number of Cards', all_cards:'All', direction:'Direction',
+    start:'START →', correct_ans:'Correct', next_card:'Next card →',
+    success_rate:'SUCCESS RATE', correct:'Correct', wrong:'Wrong',
+    total:'Total', repeat_mistakes:'REPEAT MISTAKES', play_again:'Play again',
+    menu:'Menu', tap_letter:'Tap a letter for details',
+    num_games:'Games played', best_score:'Best score',
+    total_q:'Total questions', average:'Average', reset_stats:'Reset statistics',
+    example_word:'Example word', play_pronunciation:'🔊 Play pronunciation',
+    settings:'Settings',
+    dirs: {
+      'ru-en': '🇷🇺 → 🇬🇧', 'en-ru': '🇬🇧 → 🇷🇺',
+      'cz-en': '🇨🇿 → 🇬🇧', 'en-cz': '🇬🇧 → 🇨🇿',
+    },
+    dir_labels: {
+      'ru-en': 'RUSSIAN → ENGLISH', 'en-ru': 'ENGLISH → RUSSIAN',
+      'cz-en': 'CZECH → ENGLISH', 'en-cz': 'ENGLISH → CZECH',
+    },
+    correct_msg: '✓ Correct!',
+    wrong_msg: (a) => `✗ Correct: ${a}`,
+    result_titles: ["Don't give up!", 'Almost!', 'Good!', 'Excellent!'],
+    repeat_btn: (n) => `REPEAT MISTAKES (${n})`,
+    score_label: (c,t) => `${c} of ${t} correct`,
+    placeholder: 'Your answer...',
+  }
+};
+
+let lang = 'cz';
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('ru_lang', l);
+  document.getElementById('lang-cz').style.opacity = l === 'cz' ? '1' : '0.4';
+  document.getElementById('lang-en').style.opacity = l === 'en' ? '1' : '0.4';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (i18n[l][key]) el.textContent = i18n[l][key];
+  });
+  document.getElementById('answer-input').placeholder = i18n[l].placeholder;
+}
+
+function t(key) { return i18n[lang][key] || key; }
+
+// ── DATA ──
+const AZBUKA = [
+  {ru:"А а",ph:"a",cz:"a",slovo:"армия",slovo_ph:"armija",slovo_cz:"armáda"},
+  {ru:"Б б",ph:"b",cz:"b",slovo:"батальон",slovo_ph:"bataljon",slovo_cz:"batalion"},
+  {ru:"В в",ph:"v",cz:"v",slovo:"война",slovo_ph:"vojna",slovo_cz:"válka"},
+  {ru:"Г г",ph:"g",cz:"g",slovo:"генерал",slovo_ph:"general",slovo_cz:"generál"},
+  {ru:"Д д",ph:"d",cz:"d",slovo:"дрон",slovo_ph:"dron",slovo_cz:"dron"},
+  {ru:"Е е",ph:"je",cz:"je",slovo:"единица",slovo_ph:"jedinica",slovo_cz:"jednotka"},
+  {ru:"Ё ё",ph:"jo",cz:"jo",slovo:"ёмкость",slovo_ph:"jomkost",slovo_cz:"kapacita"},
+  {ru:"Ж ж",ph:"zh",cz:"ž",slovo:"железо",slovo_ph:"zhelezo",slovo_cz:"železo / ocel"},
+  {ru:"З з",ph:"z",cz:"z",slovo:"захват",slovo_ph:"zachvat",slovo_cz:"zajmutí území"},
+  {ru:"И и",ph:"i",cz:"i",slovo:"источник",slovo_ph:"istochnik",slovo_cz:"zdroj informací"},
+  {ru:"Й й",ph:"j",cz:"j",slovo:"йод",slovo_ph:"jod",slovo_cz:"jód"},
+  {ru:"К к",ph:"k",cz:"k",slovo:"командир",slovo_ph:"komandir",slovo_cz:"velitel"},
+  {ru:"Л л",ph:"l",cz:"l",slovo:"линия фронта",slovo_ph:"linija fronta",slovo_cz:"frontová linie"},
+  {ru:"М м",ph:"m",cz:"m",slovo:"Москва",slovo_ph:"Moskva",slovo_cz:"Moskva"},
+  {ru:"Н н",ph:"n",cz:"n",slovo:"наступление",slovo_ph:"nastupljenije",slovo_cz:"ofenziva"},
+  {ru:"О о",ph:"o",cz:"o",slovo:"оружие",slovo_ph:"oruzhije",slovo_cz:"zbraně"},
+  {ru:"П п",ph:"p",cz:"p",slovo:"пропаганда",slovo_ph:"propaganda",slovo_cz:"propaganda"},
+  {ru:"Р р",ph:"r",cz:"r",slovo:"ракета",slovo_ph:"raketa",slovo_cz:"raketa"},
+  {ru:"С с",ph:"s",cz:"s",slovo:"солдат",slovo_ph:"soldat",slovo_cz:"voják"},
+  {ru:"Т т",ph:"t",cz:"t",slovo:"танк",slovo_ph:"tank",slovo_cz:"tank"},
+  {ru:"У у",ph:"u",cz:"u",slovo:"удар",slovo_ph:"udar",slovo_cz:"útok"},
+  {ru:"Ф ф",ph:"f",cz:"f",slovo:"фронт",slovo_ph:"front",slovo_cz:"fronta"},
+  {ru:"Х х",ph:"ch",cz:"ch",slovo:"химическое оружие",slovo_ph:"chimicheskoje oruzhije",slovo_cz:"chemické zbraně"},
+  {ru:"Ц ц",ph:"ts",cz:"c",slovo:"цель",slovo_ph:"tsel",slovo_cz:"cíl"},
+  {ru:"Ч ч",ph:"ch",cz:"č",slovo:"часть",slovo_ph:"chast",slovo_cz:"vojenský útvar"},
+  {ru:"Ш ш",ph:"sh",cz:"š",slovo:"штаб",slovo_ph:"shtab",slovo_cz:"štáb"},
+  {ru:"Щ щ",ph:"shch",cz:"šč",slovo:"щит",slovo_ph:"shchit",slovo_cz:"štít"},
+  {ru:"Ъ ъ",ph:"—",cz:"tvrdý znak",slovo:"объект",slovo_ph:"objekt",slovo_cz:"objekt / cíl"},
+  {ru:"Ы ы",ph:"y",cz:"y",slovo:"взрыв",slovo_ph:"vzryv",slovo_cz:"výbuch"},
+  {ru:"Ь ь",ph:"—",cz:"měkký znak",slovo:"артиллерия",slovo_ph:"artillerija",slovo_cz:"artilerie"},
+  {ru:"Э э",ph:"e",cz:"e",slovo:"эвакуация",slovo_ph:"evakuacija",slovo_cz:"evakuace"},
+  {ru:"Ю ю",ph:"ju",cz:"ju",slovo:"юг",slovo_ph:"jug",slovo_cz:"jih (směr)"},
+  {ru:"Я я",ph:"ja",cz:"ja",slovo:"ядерное оружие",slovo_ph:"jadernoje oruzhije",slovo_cz:"jaderné zbraně"},
+];
+
+const SLOVICKA = [
+  {ru:"привет",ph:"privet",cz:"ahoj",en:"hello",cat:"základní",diff:"zacatecnik"},
+  {ru:"пока",ph:"poka",cz:"nashledanou",en:"goodbye",cat:"základní",diff:"zacatecnik"},
+  {ru:"спасибо",ph:"spasibo",cz:"děkuji",en:"thank you",cat:"základní",diff:"zacatecnik"},
+  {ru:"да",ph:"da",cz:"ano",en:"yes",cat:"základní",diff:"zacatecnik"},
+  {ru:"нет",ph:"njet",cz:"ne",en:"no",cat:"základní",diff:"zacatecnik"},
+  {ru:"война",ph:"vojna",cz:"válka",en:"war",cat:"vojenství",diff:"zacatecnik"},
+  {ru:"мир",ph:"mir",cz:"mír / svět",en:"peace / world",cat:"vojenství",diff:"zacatecnik"},
+  {ru:"армия",ph:"armija",cz:"armáda",en:"army",cat:"vojenství",diff:"zacatecnik"},
+  {ru:"солдат",ph:"soldat",cz:"voják",en:"soldier",cat:"vojenství",diff:"zacatecnik"},
+  {ru:"танк",ph:"tank",cz:"tank",en:"tank",cat:"technika",diff:"zacatecnik"},
+  {ru:"ракета",ph:"raketa",cz:"raketa",en:"missile / rocket",cat:"technika",diff:"zacatecnik"},
+  {ru:"дрон",ph:"dron",cz:"dron",en:"drone",cat:"technika",diff:"zacatecnik"},
+  {ru:"Украина",ph:"Ukraina",cz:"Ukrajina",en:"Ukraine",cat:"geografie",diff:"zacatecnik"},
+  {ru:"Россия",ph:"Rossija",cz:"Rusko",en:"Russia",cat:"geografie",diff:"zacatecnik"},
+  {ru:"Киев",ph:"Kijef",cz:"Kyjev",en:"Kyiv",cat:"geografie",diff:"zacatecnik"},
+  {ru:"Москва",ph:"Moskva",cz:"Moskva",en:"Moscow",cat:"geografie",diff:"zacatecnik"},
+  {ru:"граница",ph:"granica",cz:"hranice",en:"border",cat:"geografie",diff:"zacatecnik"},
+  {ru:"враг",ph:"vrag",cz:"nepřítel",en:"enemy",cat:"jednotky",diff:"zacatecnik"},
+  {ru:"союзник",ph:"sojuznik",cz:"spojenec",en:"ally",cat:"jednotky",diff:"zacatecnik"},
+  {ru:"правда",ph:"pravda",cz:"pravda",en:"truth",cat:"politika",diff:"zacatecnik"},
+  {ru:"ложь",ph:"lozh",cz:"lež",en:"lie",cat:"politika",diff:"zacatecnik"},
+  {ru:"НАТО",ph:"NATO",cz:"NATO",en:"NATO",cat:"politika",diff:"zacatecnik"},
+  {ru:"видео",ph:"video",cz:"video",en:"video",cat:"osint",diff:"zacatecnik"},
+  {ru:"канал",ph:"kanal",cz:"kanál",en:"channel",cat:"osint",diff:"zacatecnik"},
+  {ru:"оружие",ph:"oruzhije",cz:"zbraně",en:"weapons",cat:"vojenství",diff:"pokrocily"},
+  {ru:"удар",ph:"udar",cz:"útok / úder",en:"strike / attack",cat:"vojenství",diff:"pokrocily"},
+  {ru:"взрыв",ph:"vzryv",cz:"výbuch",en:"explosion",cat:"vojenství",diff:"pokrocily"},
+  {ru:"погибший",ph:"pogibshij",cz:"padlý / mrtvý",en:"killed / dead",cat:"vojenství",diff:"pokrocily"},
+  {ru:"раненый",ph:"ranenij",cz:"zraněný",en:"wounded",cat:"vojenství",diff:"pokrocily"},
+  {ru:"плен",ph:"plen",cz:"zajetí",en:"captivity",cat:"vojenství",diff:"pokrocily"},
+  {ru:"фронт",ph:"front",cz:"fronta",en:"front line",cat:"vojenství",diff:"pokrocily"},
+  {ru:"наступление",ph:"nastupljenije",cz:"ofenziva",en:"offensive",cat:"vojenství",diff:"pokrocily"},
+  {ru:"потери",ph:"poteri",cz:"ztráty",en:"casualties / losses",cat:"vojenství",diff:"pokrocily"},
+  {ru:"самолёт",ph:"samoljot",cz:"letadlo",en:"aircraft / plane",cat:"technika",diff:"pokrocily"},
+  {ru:"вертолёт",ph:"vertoljot",cz:"vrtulník",en:"helicopter",cat:"technika",diff:"pokrocily"},
+  {ru:"корабль",ph:"korabl",cz:"loď",en:"ship",cat:"technika",diff:"pokrocily"},
+  {ru:"артиллерия",ph:"artillerija",cz:"artilerie",en:"artillery",cat:"technika",diff:"pokrocily"},
+  {ru:"территория",ph:"territorija",cz:"území",en:"territory",cat:"geografie",diff:"pokrocily"},
+  {ru:"оккупация",ph:"okkupacija",cz:"okupace",en:"occupation",cat:"geografie",diff:"pokrocily"},
+  {ru:"батальон",ph:"bataljon",cz:"batalion",en:"battalion",cat:"jednotky",diff:"pokrocily"},
+  {ru:"бригада",ph:"brigada",cz:"brigáda",en:"brigade",cat:"jednotky",diff:"pokrocily"},
+  {ru:"командир",ph:"komandir",cz:"velitel",en:"commander",cat:"jednotky",diff:"pokrocily"},
+  {ru:"генерал",ph:"general",cz:"generál",en:"general",cat:"jednotky",diff:"pokrocily"},
+  {ru:"источник",ph:"istochnik",cz:"zdroj",en:"source",cat:"osint",diff:"pokrocily"},
+  {ru:"доказательство",ph:"dokazatelstvo",cz:"důkaz",en:"evidence / proof",cat:"osint",diff:"pokrocily"},
+  {ru:"сообщение",ph:"soobshhenije",cz:"zpráva",en:"message / report",cat:"osint",diff:"pokrocily"},
+  {ru:"телеграм",ph:"telegram",cz:"Telegram",en:"Telegram",cat:"osint",diff:"pokrocily"},
+  {ru:"переговоры",ph:"peregovory",cz:"jednání",en:"negotiations",cat:"politika",diff:"pokrocily"},
+  {ru:"санкции",ph:"sankcii",cz:"sankce",en:"sanctions",cat:"politika",diff:"pokrocily"},
+  {ru:"суверенитет",ph:"suverenitet",cz:"suverenita",en:"sovereignty",cat:"politika",diff:"pokrocily"},
+  {ru:"пропаганда",ph:"propaganda",cz:"propaganda",en:"propaganda",cat:"politika",diff:"pokrocily"},
+];
+
+const FRAZE = [
+  {ru:"специальная военная операция",ph:"specialnaja vojennaja operacija",cz:"speciální vojenská operace (ruský výraz pro invazi)",en:"special military operation (Russian term for invasion)",diff:"zacatecnik"},
+  {ru:"денацификация",ph:"denacifikacija",cz:"denacifikace (ruská propaganda)",en:"denazification (Russian propaganda term)",diff:"zacatecnik"},
+  {ru:"демилитаризация",ph:"demilitarizacija",cz:"demilitarizace",en:"demilitarization",diff:"zacatecnik"},
+  {ru:"территориальная целостность",ph:"territorijalnaja celostnost",cz:"územní celistvost",en:"territorial integrity",diff:"zacatecnik"},
+  {ru:"по данным министерства обороны",ph:"po dannym ministerstva oborony",cz:"podle údajů ministerstva obrany",en:"according to the Ministry of Defence",diff:"pokrocily"},
+  {ru:"в ходе боевых действий",ph:"v chode bojevych dejstvij",cz:"v průběhu bojových akcí",en:"during combat operations",diff:"pokrocily"},
+  {ru:"уничтожено живой силы",ph:"unichtozheno zhivoj sily",cz:"zlikvidováno živé síly (vojáků)",en:"enemy personnel eliminated",diff:"pokrocily"},
+  {ru:"подтверждённые потери",ph:"podtverzhdjonnyje poteri",cz:"potvrzené ztráty",en:"confirmed casualties",diff:"pokrocily"},
+  {ru:"освобождённые территории",ph:"osvobozhdjonnye territorii",cz:"osvobozená území (proruský výraz)",en:"liberated territories (pro-Russian term)",diff:"pokrocily"},
+  {ru:"оккупированные территории",ph:"okkupirovannyje territorii",cz:"okupovaná území (protiruský výraz)",en:"occupied territories (anti-Russian term)",diff:"pokrocily"},
+  {ru:"западные страны",ph:"zapadnyje strany",cz:"západní země / státy",en:"western countries",diff:"zacatecnik"},
+  {ru:"коллективный запад",ph:"kollektivnyj zapad",cz:"kolektivní západ (proruský výraz)",en:"collective West (pro-Russian term)",diff:"pokrocily"},
+  {ru:"информационная война",ph:"informacionnaja vojna",cz:"informační válka",en:"information warfare",diff:"pokrocily"},
+  {ru:"украинские вооружённые силы",ph:"ukrainskije vooruzhjonnyje sily",cz:"ukrajinské ozbrojené síly",en:"Ukrainian Armed Forces",diff:"pokrocily"},
+  {ru:"Вооружённые силы России",ph:"Vooruzhjonnyje sily Rossii",cz:"Ozbrojené síly Ruska",en:"Armed Forces of Russia",diff:"pokrocily"},
+];
+
+const ZKRATKY = [
+  {ru:"ВСУ",ph:"VSU",cz:"Ozbrojené síly Ukrajiny",en:"Armed Forces of Ukraine",diff:"zacatecnik"},
+  {ru:"ВС РФ",ph:"VS RF",cz:"Ozbrojené síly Ruské federace",en:"Armed Forces of the Russian Federation",diff:"zacatecnik"},
+  {ru:"РФ",ph:"RF",cz:"Ruská federace",en:"Russian Federation",diff:"zacatecnik"},
+  {ru:"НАТО",ph:"NATO",cz:"Severoatlantická aliance",en:"North Atlantic Alliance (NATO)",diff:"zacatecnik"},
+  {ru:"СВО",ph:"SVO",cz:"Speciální vojenská operace (ruský výraz pro invazi)",en:"Special Military Operation (Russian term for invasion)",diff:"zacatecnik"},
+  {ru:"МО",ph:"MO",cz:"Ministerstvo obrany",en:"Ministry of Defence",diff:"zacatecnik"},
+  {ru:"ФСБ",ph:"FSB",cz:"Federální bezpečnostní služba",en:"Federal Security Service",diff:"zacatecnik"},
+  {ru:"ГРУ",ph:"GRU",cz:"Hlavní zpravodajská správa (vojenská rozvědka)",en:"Main Intelligence Directorate (military intelligence)",diff:"pokrocily"},
+  {ru:"СВР",ph:"SVR",cz:"Zahraniční zpravodajská služba Ruska",en:"Foreign Intelligence Service of Russia",diff:"pokrocily"},
+  {ru:"БПЛА",ph:"BPLA",cz:"Bezpilotní letadlo (dron)",en:"Unmanned aerial vehicle (drone)",diff:"pokrocily"},
+  {ru:"КАБ",ph:"KAB",cz:"Řízená letecká bomba",en:"Guided aerial bomb",diff:"pokrocily"},
+  {ru:"ПВО",ph:"PVO",cz:"Protivzdušná obrana",en:"Air defence",diff:"pokrocily"},
+  {ru:"РСЗО",ph:"RSZO",cz:"Raketometný systém (MLRS)",en:"Multiple launch rocket system (MLRS)",diff:"pokrocily"},
+  {ru:"ДНР",ph:"DNR",cz:"Doněcká lidová republika",en:"Donetsk People's Republic",diff:"zacatecnik"},
+  {ru:"ЛНР",ph:"LNR",cz:"Luhanská lidová republika",en:"Luhansk People's Republic",diff:"zacatecnik"},
+  {ru:"OSINT",ph:"OSINT",cz:"Zpravodajství z otevřených zdrojů",en:"Open-source intelligence",diff:"zacatecnik"},
+];
+
+const CATS_SLOVICKA = ["základní","vojenství","technika","geografie","jednotky","osint","politika"];
+
+// Směry podle jazyka
+const DIRS = {
+  cz: ['ru-cz','cz-ru','cz-en','en-cz'],
+  en: ['ru-en','en-ru','cz-en','en-cz'],
+};
+
+let mode='azbuka', selCats=[...CATS_SLOVICKA], selCount=20, selDir='ru-cz', selDiff='vse';
+let deck=[], idx=0, correct=0, wrongCards=[], answered=false, isRepeat=false;
+
+// ── HELPERS ──
+function btnOn(b){ b.classList.add('bg-red-600','border-red-600','text-white'); b.classList.remove('bg-zinc-900','border-zinc-700','text-zinc-500'); }
+function btnOff(b){ b.classList.remove('bg-red-600','border-red-600','text-white'); b.classList.add('bg-zinc-900','border-zinc-700','text-zinc-500'); }
+function groupSelect(btn){ btn.closest('.grid').querySelectorAll('button').forEach(b=>btnOff(b)); btnOn(btn); }
+
+// ── SPEECH ──
+function speakText(text){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utt=new SpeechSynthesisUtterance(text);
+  utt.lang='ru-RU'; utt.rate=0.9;
+  const v=window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('ru'));
+  if(v) utt.voice=v;
+  window.speechSynthesis.speak(utt);
+}
+let currentSpeakText='';
+function speakCurrent(){ if(currentSpeakText) speakText(currentSpeakText); }
+
+// ── NAVIGATION ──
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='stats') showStatsScreen();
+  if(id==='menu') updateMenuStats();
+  if(id==='tabulka') buildTabulka();
+}
+
+// ── SETTINGS ──
+function selectCount(n,btn){ selCount=n; groupSelect(btn); }
+
+function buildDirButtons(){
+  const container = document.getElementById('dir-buttons');
+  container.innerHTML = '';
+  const dirs = DIRS[lang];
+  dirs.forEach((dir, i) => {
+    const b = document.createElement('button');
+    b.className = i===0
+      ? 'opt-btn bg-red-600 border border-red-600 rounded-xl py-3 text-white text-xs text-center cursor-pointer transition-all'
+      : 'opt-btn bg-zinc-900 border border-zinc-700 rounded-xl py-3 text-zinc-500 text-xs text-center cursor-pointer transition-all';
+    b.textContent = i18n[lang].dirs[dir];
+    b.onclick = () => { selDir=dir; groupSelect(b); };
+    container.appendChild(b);
+  });
+  selDir = dirs[0];
+}
+
+function selectDiff(d,btn){ selDiff=d; groupSelect(btn); }
+
+function toggleCat(cat,btn){
+  if(selCats.includes(cat)){
+    if(selCats.length===1) return;
+    selCats=selCats.filter(c=>c!==cat); btnOff(btn);
+  } else { selCats.push(cat); btnOn(btn); }
+}
+
+function goSettings(m){
+  mode=m; isRepeat=false;
+  const titles = {
+    cz: {azbuka:'Nastavení — Azbuka', slovicka:'Nastavení — Slovíčka', fraze:'Nastavení — Fráze', zkratky:'Nastavení — Zkratky', oboji:'Nastavení — Vše'},
+    en: {azbuka:'Settings — Alphabet', slovicka:'Settings — Vocabulary', fraze:'Settings — Phrases', zkratky:'Settings — Abbreviations', oboji:'Settings — All'},
+  };
+  document.getElementById('settings-title').textContent = titles[lang][m];
+
+  const cg=document.getElementById('category-group');
+  const dg=document.getElementById('diff-group');
+  const dirg=document.getElementById('dir-group');
+  const co=document.getElementById('category-options');
+
+  cg.style.display=(m==='slovicka'||m==='oboji')?'flex':'none';
+  dg.style.display=(m==='azbuka')?'none':'flex';
+  dirg.style.display=(m==='azbuka')?'none':'flex';
+
+  if(m==='slovicka'||m==='oboji'){
+    selCats=[...CATS_SLOVICKA]; co.innerHTML='';
+    CATS_SLOVICKA.forEach(cat=>{
+      const b=document.createElement('button');
+      b.className='bg-red-600 border border-red-600 rounded-xl py-3 text-white text-xs text-center cursor-pointer transition-all';
+      b.textContent=cat; b.onclick=()=>toggleCat(cat,b); co.appendChild(b);
+    });
+  }
+
+  selCount=20; selDiff='vse';
+  document.getElementById('count-grid').querySelectorAll('button').forEach((b,i)=>{ if(i===2) btnOn(b); else btnOff(b); });
+  document.getElementById('diff-group').querySelectorAll('button').forEach((b,i)=>{ if(i===0) btnOn(b); else btnOff(b); });
+
+  if(m!=='azbuka') buildDirButtons();
+  showScreen('settings');
+}
+
+// ── TABULKA ──
+function buildTabulka(){
+  const grid=document.getElementById('tabulka-grid');
+  grid.innerHTML='';
+  AZBUKA.forEach((p,i)=>{
+    const div=document.createElement('div');
+    div.className='bg-zinc-900 border border-zinc-800 rounded-2xl p-3 flex flex-col gap-1 cursor-pointer active:scale-97 transition-transform';
+    div.innerHTML=`<div class="text-2xl text-red-400 leading-none">${p.ru}</div><div class="text-xs text-amber-400 italic">[${p.ph}]</div><div class="text-xs text-zinc-500">${p.cz}</div>`;
+    div.onclick=()=>showDetail(i); grid.appendChild(div);
+  });
+}
+
+function showDetail(i){
+  const p=AZBUKA[i];
+  document.getElementById('d-pismeno').textContent=p.ru;
+  document.getElementById('d-ph').textContent=`[${p.ph}]`;
+  document.getElementById('d-cz').textContent=p.cz.toUpperCase();
+  document.getElementById('d-slovo').textContent=p.slovo;
+  document.getElementById('d-slovo-ph').textContent=`[${p.slovo_ph}]`;
+  document.getElementById('d-slovo-cz').textContent=p.slovo_cz;
+  const o=document.getElementById('detail-overlay');
+  o.classList.remove('hidden'); o.classList.add('flex');
+}
+
+function closeDetail(e){
+  if(!e||e.target===document.getElementById('detail-overlay')){
+    const o=document.getElementById('detail-overlay');
+    o.classList.add('hidden'); o.classList.remove('flex');
+  }
+}
+
+// ── DECK ──
+function getVal(item, dir) {
+  // Vrátí správnou hodnotu podle směru
+  const [from, to] = dir.split('-');
+  const q = item[from] || item.ru;
+  const a = item[to] || item.cz;
+  return {q, a};
+}
+
+function buildDeck(){
+  let cards=[];
+
+  if(mode==='azbuka'){
+    AZBUKA.forEach(a=>cards.push({q:a.ru, a:`${a.ph} (${a.cz})`, ph:'', cat:'azbuka', speak:a.ru}));
+    return cards.slice(0, Math.min(selCount, cards.length));
+  }
+
+  if(mode==='slovicka'||mode==='oboji'){
+    let sl=SLOVICKA.filter(s=>selCats.includes(s.cat));
+    if(selDiff!=='vse') sl=sl.filter(s=>s.diff===selDiff);
+    sl.forEach(s=>{
+      const {q,a} = getVal(s, selDir);
+      cards.push({q, a, ph:s.ph, cat:s.cat, speak:s.ru});
+    });
+  }
+
+  if(mode==='fraze'){
+    let fr=[...FRAZE]; if(selDiff!=='vse') fr=fr.filter(f=>f.diff===selDiff);
+    fr.forEach(f=>{
+      const a = lang==='en' ? f.en : f.cz;
+      cards.push({q:f.ru, a, ph:f.ph, cat:'fráze', speak:f.ru});
+    });
+  }
+
+  if(mode==='zkratky'){
+    let zk=[...ZKRATKY]; if(selDiff!=='vse') zk=zk.filter(z=>z.diff===selDiff);
+    zk.forEach(z=>{
+      const a = lang==='en' ? z.en : z.cz;
+      cards.push({q:z.ru, a, ph:z.ph, cat:'zkratka', speak:z.ru});
+    });
+  }
+
+  for(let i=cards.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [cards[i],cards[j]]=[cards[j],cards[i]]; }
+  return cards.slice(0,Math.min(selCount,cards.length));
+}
+
+// ── GAME ──
+function startGame(){ isRepeat=false; deck=buildDeck(); idx=0; correct=0; wrongCards=[]; answered=false; showScreen('game'); showCard(); }
+
+function showCard(){
+  const card=deck[idx];
+  document.getElementById('progress-fill').style.width=(idx/deck.length*100)+'%';
+  document.getElementById('progress-text').textContent=`${idx+1}/${deck.length}`;
+  document.getElementById('card-category').textContent=card.cat;
+  document.getElementById('card-question').textContent=card.q;
+  document.getElementById('card-phonetic').textContent=card.ph?`[${card.ph}]`:'';
+  document.getElementById('card-direction').textContent=
+    mode==='azbuka' ? 'RUSKY → VÝSLOVNOST' :
+    (i18n[lang].dir_labels[selDir] || selDir);
+  document.getElementById('answer-text').textContent=card.a;
+  currentSpeakText=card.speak||card.q;
+  const inp=document.getElementById('answer-input');
+  inp.value=''; inp.className='flex-1 bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-zinc-100 font-mono text-base outline-none focus:border-red-500 transition-colors';
+  inp.disabled=false; inp.focus();
+  const ca=document.getElementById('card-answer'); ca.classList.add('hidden'); ca.classList.remove('flex');
+  const fb=document.getElementById('feedback'); fb.classList.add('hidden'); fb.classList.remove('flex');
+  const nb=document.getElementById('next-btn'); nb.classList.add('hidden'); nb.classList.remove('flex');
+  document.getElementById('submit-btn').classList.remove('hidden');
+  answered=false;
+}
+
+function checkAnswer(){
+  if(answered){ nextCard(); return; }
+  const card=deck[idx];
+  const inp=document.getElementById('answer-input');
+  const user=inp.value.trim().toLowerCase();
+  const ans=card.a.toLowerCase();
+  answered=true; inp.disabled=true;
+  document.getElementById('card-answer').classList.remove('hidden'); document.getElementById('card-answer').classList.add('flex');
+  document.getElementById('submit-btn').classList.add('hidden');
+  document.getElementById('next-btn').classList.remove('hidden'); document.getElementById('next-btn').classList.add('flex');
+  const fb=document.getElementById('feedback');
+  const variants=ans.split('/').map(s=>s.trim());
+  if(variants.some(v=>user===v||user===v.replace(/\(.*\)/,'').trim())){
+    inp.classList.add('border-green-500','bg-green-950');
+    fb.className='flex items-center gap-3 px-4 py-3 rounded-xl text-sm bg-green-950 text-green-400';
+    fb.textContent=i18n[lang].correct_msg; correct++;
+  } else {
+    inp.classList.add('border-red-500','bg-red-950');
+    fb.className='flex items-center gap-3 px-4 py-3 rounded-xl text-sm bg-red-950 text-red-400';
+    fb.textContent=i18n[lang].wrong_msg(card.a); wrongCards.push(card);
+  }
+  fb.classList.remove('hidden');
+}
+
+function nextCard(){ idx++; if(idx>=deck.length) showResult(); else showCard(); }
+
+function showResult(){
+  const total=deck.length,wrong=total-correct,pct=Math.round(correct/total*100);
+  saveStats(correct,total);
+  document.getElementById('score-pct').textContent=pct+'%';
+  document.getElementById('res-correct').textContent=correct;
+  document.getElementById('res-wrong').textContent=wrong;
+  document.getElementById('res-total').textContent=total;
+  const titles=i18n[lang].result_titles;
+  let emoji='😔',title=titles[0];
+  if(pct>=90){emoji='🔥';title=titles[3];}
+  else if(pct>=70){emoji='💪';title=titles[2];}
+  else if(pct>=50){emoji='📚';title=titles[1];}
+  document.getElementById('result-emoji').textContent=emoji;
+  document.getElementById('result-title').textContent=title;
+  document.getElementById('result-sub').textContent=i18n[lang].score_label(correct,total);
+  const rb=document.getElementById('repeat-btn');
+  if(wrongCards.length>0){ rb.classList.remove('hidden'); rb.textContent=i18n[lang].repeat_btn(wrongCards.length); }
+  else rb.classList.add('hidden');
+  showScreen('result');
+}
+
+function repeatWrong(){ isRepeat=true; deck=wrongCards.map(c=>({...c})); idx=0; correct=0; wrongCards=[]; answered=false; showScreen('game'); showCard(); }
+
+// ── STATS ──
+function loadStats(){ return JSON.parse(localStorage.getItem('ru_stats')||'{"games":0,"totalQ":0,"totalC":0,"best":0}'); }
+function saveStats(c,t){ const s=loadStats(); s.games++; s.totalQ+=t; s.totalC+=c; const p=Math.round(c/t*100); if(p>s.best) s.best=p; localStorage.setItem('ru_stats',JSON.stringify(s)); updateMenuStats(); }
+function resetStats(){ if(confirm(lang==='cz'?'Smazat všechny statistiky?':'Reset all statistics?')){ localStorage.removeItem('ru_stats'); updateMenuStats(); showStatsScreen(); } }
+function updateMenuStats(){ const s=loadStats(); document.getElementById('stat-games').textContent=s.games; document.getElementById('stat-best').textContent=s.best+'%'; const avg=s.totalQ>0?Math.round(s.totalC/s.totalQ*100):0; document.getElementById('stat-total').textContent=avg+'%'; }
+function showStatsScreen(){ const s=loadStats(); document.getElementById('s-games').textContent=s.games; document.getElementById('s-best').textContent=s.best+'%'; document.getElementById('s-total-q').textContent=s.totalQ; const avg=s.totalQ>0?Math.round(s.totalC/s.totalQ*100):0; document.getElementById('s-avg').textContent=avg+'%'; }
+
+document.getElementById('answer-input').addEventListener('keydown',e=>{ if(e.key==='Enter') checkAnswer(); });
+window.speechSynthesis.onvoiceschanged=()=>{ window.speechSynthesis.getVoices(); };
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(e=>console.log('SW error:',e)); }
+
+// Init
+lang = localStorage.getItem('ru_lang') || 'cz';
+setLang(lang);
+updateMenuStats();
+</script>
+</body>
+</html>
